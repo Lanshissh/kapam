@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Who Wants to Be a Kapampangan</title>
+  <style>
+    :root{
+      --bg:#0b1335;           /* deep indigo */
+      --bg-2:#0f1a4b;         /* stage ring */
+      --ink:#eaf0ff;          /* text */
+      --gold:#ffcc4d;         /* accent */
+      --cyan:#59e1ff;         /* secondary accent */
+      --danger:#ff5e79;       /* incorrect */
+      --success:#3ee28f;      /* correct */
+      --muted:#9ba3c7;        /* muted text */
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 600px at 70% -10%, #1b2a6b 0%, transparent 60%),
+                               radial-gradient(900px 500px at 20% 110%, #15215a 0%, transparent 60%),
+                               var(--bg);
+      color:var(--ink); font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    .app{display:grid; grid-template-columns: 320px 1fr; gap:18px; max-width:1200px; margin:0 auto; padding:18px}
+
+    header{
+      grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:42px; height:42px; border-radius:50%; background:
+      radial-gradient(circle at 30% 30%, #fff3, #0000 40%),
+      conic-gradient(from 0deg, #173a9d, #1c56c7, #3a7fe0, #3c62c9, #173a9d);
+      border:2px solid #4aa6ff44; box-shadow:0 0 0 3px #ffffff10, 0 8px 30px #0008;
+    }
+    h1{font-size:20px; margin:0}
+    .controls{display:flex; gap:10px; align-items:center}
+    .btn{appearance:none; border:1px solid #ffffff22; background:#1a2358; color:var(--ink); padding:10px 14px; border-radius:999px; cursor:pointer; font-weight:600; letter-spacing:.2px; box-shadow: inset 0 -2px 0 #0003, 0 6px 18px #0006; transition: transform .05s ease, background .2s ease, border-color .2s ease, opacity .2s ease}
+    .btn:hover{background:#203070}
+    .btn:active{transform: translateY(1px)}
+    .btn[disabled]{opacity:.45; cursor:not-allowed}
+
+    /* Stage */
+    .stage{position:relative; display:grid; grid-template-rows:auto 1fr auto; gap:14px; background: linear-gradient(180deg, #0c143a, #0b1335); border:1px solid #ffffff17; border-radius:22px; padding:18px; box-shadow:0 15px 60px #0008, inset 0 0 0 1px #0006}
+
+    .hud{display:flex; align-items:center; gap:12px; justify-content:space-between}
+    .lifelines{display:flex; gap:10px}
+    .lifeline{background:#12194a; border:1px solid #ffffff22; padding:8px 12px; border-radius:12px; font-weight:700; cursor:pointer}
+    .lifeline.used{opacity:.45; text-decoration: line-through}
+
+    .timer{display:flex; align-items:center; gap:8px; font-weight:700}
+    .timer .ring{width:36px; height:36px; border-radius:50%; background: conic-gradient(var(--gold) var(--angle, 0deg), #1a2358 0);
+                 display:grid; place-items:center; border:2px solid #ffffff22}
+    .timer .ring span{background:#0b1335; border-radius:50%; width:24px; height:24px; display:grid; place-items:center; font-size:12px; font-weight:800}
+
+    /* Question */
+    .question{background:#0f1a4b; border:1px solid #ffffff22; border-radius:16px; padding:16px; font-size:20px; font-weight:700; min-height:78px; display:flex; align-items:center; justify-content:center; text-align:center; box-shadow: inset 0 0 0 2px #0003}
+    .answers{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    .answer{position:relative; background:#0f1d55; border:2px solid #ffffff1a; border-radius:999px; padding:14px 16px 14px 52px; font-weight:700; cursor:pointer; box-shadow: 0 12px 28px #0008, inset 0 -2px 0 #0006; transition: transform .05s ease, background .2s ease, border-color .2s ease, filter .2s ease}
+    .answer:hover{background:#16276b}
+    .answer:active{transform: translateY(1px)}
+    .answer[disabled]{opacity:.6; cursor:not-allowed; filter:grayscale(.3)}
+
+    .answer .badge{position:absolute; left:10px; top:50%; transform:translateY(-50%); background: #0a1238; border:2px solid #ffffff22; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-weight:900}
+
+    .answer.selected{animation: pulse 1s infinite}
+    .answer.correct{background: linear-gradient(180deg, #153f3a, #0c2e29); border-color: #1fe1a2; box-shadow:0 0 0 3px #1fe1a230, 0 18px 50px #0f0a}
+    .answer.wrong{background: linear-gradient(180deg, #4f1723, #2b0d14); border-color:#ff5e79; box-shadow:0 0 0 3px #ff5e7930, 0 18px 50px #f005}
+
+    @keyframes pulse{0%{filter:brightness(1)} 50%{filter:brightness(1.25)} 100%{filter:brightness(1)}}
+
+    /* Ladder */
+    aside.ladder{background:#0f1a4b; border:1px solid #ffffff22; border-radius:20px; padding:16px; box-shadow: inset 0 0 0 2px #0003}
+    .ladder h2{font-size:14px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin:0 0 8px 0}
+    .ladder ol{margin:0; padding:0; list-style:none; counter-reset: row}
+    .ladder li{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px; border-radius:10px; font-weight:700; letter-spacing:.3px; color:#cfe2ff; border:1px solid transparent}
+    .ladder li .safe{font-size:10px; opacity:.8}
+    .ladder li.current{background: linear-gradient(90deg, #1c2e78, #182867); border-color:#4aa6ff44; color:#fff; box-shadow:inset 0 0 0 2px #0003}
+    .ladder li.past{opacity:.45}
+
+    /* Modals */
+    .overlay{position:fixed; inset:0; display:none; place-items:center; background:#000a; backdrop-filter: blur(2px)}
+    .overlay.show{display:grid}
+    .modal{background:#0f1a4b; border:1px solid #ffffff22; border-radius:20px; padding:18px; width:min(560px, 92vw); box-shadow:0 20px 60px #0008}
+    .modal h3{margin:0 0 10px 0}
+    .modal .bar{display:flex; align-items:flex-end; gap:10px; height:180px; margin:10px 0}
+    .modal .bar .col{flex:1; background: linear-gradient(180deg, #1a7bb0, #164f87); border:1px solid #ffffff22; border-radius:10px 10px 4px 4px; box-shadow: inset 0 -4px 0 #0005}
+    .modal .buckets{display:flex; justify-content:space-between; font-weight:800}
+    .modal .hint{background:#0a123a; padding:12px; border-radius:12px; border:1px dashed #ffffff33}
+
+    .footer{display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .earnings{font-weight:800}
+
+    /* Responsive */
+    @media (max-width: 960px){
+      .app{grid-template-columns: 1fr}
+      aside.ladder{order:2}
+      .stage{order:1}
+    }
+    /* Kiosk 1080x1920 overrides */
+    .kiosk-frame{ width:1080px; height:1920px; transform: scale(var(--kiosk-scale,1)); transform-origin: top left; }
+    .app.kiosk{ width:1080px; height:1920px; grid-template-columns:1fr; grid-template-rows:auto 1fr auto; }
+    .app.kiosk header{ margin-bottom:10px; }
+    .app.kiosk aside.ladder{ order:2; max-height:540px; overflow:auto; }
+    .app.kiosk .stage{ order:1; min-height:0; }
+    .app.kiosk .question{ font-size:28px; color:var(--ink); }
+    .app.kiosk .answer{ font-size:22px; padding:20px 24px 20px 64px; min-height:64px; }
+    .app.kiosk .timer .ring{ width:48px; height:48px; }
+    body{ user-select:none; touch-action:manipulation; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  </style>
+</head>
+<body>
+  <div class="kiosk-frame"><div class="app kiosk">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Who Wants to Be a Kapampangan</h1>
+      </div>
+      <div class="controls">
+        <button class="btn" id="btn-how">How to Play</button>
+        <button class="btn" id="btn-restart">Restart</button>
+      </div>
+    </header>
+
+    <aside class="ladder" aria-label="Money ladder">
+      <h2>Score Ladder</h2>
+      <ol id="ladder" reversed></ol>
+    </aside>
+
+    <section class="stage" aria-live="polite">
+      <div class="hud">
+        <div class="lifelines" aria-label="Lifelines">
+          <button class="lifeline" id="ll-5050" title="Remove two wrong answers (50:50)">50:50</button>
+          <button class="lifeline" id="ll-aud" title="Ask the Audience">Ask</button>
+          <button class="lifeline" id="ll-phone" title="Phone a Friend">Phone</button>
+        </div>
+        <div class="timer" aria-label="Countdown">
+          <div class="ring" id="timerRing"><span id="timerNum">30</span></div>
+          <span id="timerLabel">seconds</span>
+        </div>
+      </div>
+
+      <div class="question" id="question">Loading…</div>
+
+      <div class="answers" id="answers" role="group" aria-label="Answer choices">
+        <!-- buttons injected here -->
+      </div>
+
+      <div class="footer">
+        <div class="earnings">Checkpoint: <span id="guaranteed">0 pts</span> · Score: <span id="banked">0 pts</span></div>
+        <div class="kbd" style="opacity:.7; font-size:12px">Keys: A/B/C/D = answer · 1/2/3 = lifelines</div>
+      </div>
+    </section>
+  </div></div>
+
+  <!-- Audience modal -->
+  <div class="overlay" id="audienceModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="audTitle">
+      <h3 id="audTitle">Ask the Audience</h3>
+      <p class="hint" id="audNote">The audience votes are in!</p>
+      <div class="bar" id="audBars"></div>
+      <div class="buckets"><span>A</span><span>B</span><span>C</span><span>D</span></div>
+      <div style="text-align:right; margin-top:10px">
+        <button class="btn" id="audClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone a friend modal -->
+  <div class="overlay" id="phoneModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="phoneTitle">
+      <h3 id="phoneTitle">Phone a Friend</h3>
+      <p class="hint" id="phoneHint">Calling your smartest friend…</p>
+      <div style="text-align:right; margin-top:10px">
+        <button class="btn" id="phoneClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to play modal -->
+  <div class="overlay" id="howModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+      <h3 id="howTitle">How to Play</h3>
+      <ul>
+        <li>Answer 15 questions to climb the score ladder (no cash—just fun points!).</li>
+        <li>Checkpoints at levels 5 and 10: once you reach them, your score can't drop below that checkpoint.</li>
+        <li>Each question has 30 seconds. If time runs out, you keep your last checkpoint score.</li>
+        <li>Lifelines (each once): <b>50:50</b> removes two wrong options; <b>Ask</b> shows a helpful audience vote; <b>Phone</b> gives a friend's best guess.</li>
+        <li>Tap the answers to play. (Keyboard: A/B/C/D · 1/2/3 lifelines)</li>
+      </ul>
+      <div style="text-align:right; margin-top:10px">
+        <button class="btn" id="howClose">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game over / win modal -->
+  <div class="overlay" id="endModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+      <h3 id="endTitle">Game Over</h3>
+      <p class="hint" id="endText">Thanks for playing!</p>
+      <div style="text-align:right; margin-top:10px">
+        <button class="btn" id="endRestart">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------------------- DATA -------------------
+    const points = [100,200,300,500,1000,2000,4000,8000,16000,32000,64000,125000,250000,500000,1000000];
+    const safeMilestones = new Set([4,9,14]); // checkpoints
+
+    /** @type {{q:string, choices:string[], answer:number}[]} */
+    const questions = [
+      {q:"What city is the christmas capital of the philippines in pampanga?", choices:["Angeles City","City of San Fernando","Mabalacat City","tabalu"], answer:1},
+      {q:"Which volcano's 1991 eruption greatly affected Pampanga?", choices:["Mayon","Kanlaon","Pinatubo","Taal"], answer:2},
+      {q:"In Kapampangan, what does 'manyaman' mean?", choices:["beautiful","delicious","happy","fast"], answer:1},
+      {q:"The dish sisig is widely associated with which city in Pampanga?", choices:["San Fernando","Angeles City","Olongapo","Tarlac City"], answer:1},
+      {q:"What is the traditional Kapampangan script called?", choices:["Baybayin","Kulitan","Surat Mangyan","Badlit"], answer:1},
+      {q:"Where is the Giant Lantern Festival (Ligligan Parul) held?", choices:["Angeles City","City of San Fernando","Guagua","Apalit"], answer:1},
+      {q:"Pampanga belongs to which Philippine region?", choices:["Ilocos Region","Central Luzon","CALABARZON","Bicol Region"], answer:1},
+      {q:"How do you say 'Thank you' in Kapampangan?", choices:["Dakal a salamat","Salamat po","Agyamanak","Mabalos"], answer:0},
+      {q:"The Pampanga River is also known as the…", choices:["Rio Grande de Pampanga","Cagayan River","Agno River","Pasig River"], answer:0},
+      {q:"Which Kapampangan dessert is made from carabao’s milk?", choices:["Tibok-tibok","Leche flan","Sans rival","Halo-halo"], answer:0},
+      {q:"Betis, famed for woodcarving, is a district of which town?", choices:["Guagua","Bacolor","Minalin","Mexico"], answer:0},
+      {q:"Which town hosts the fluvial procession for Apung Iru (Saint Peter)?", choices:["Lubao","Apalit","Candaba","Arayat"], answer:1},
+      {q:"Which mountain rises prominently on Pampanga’s plain?", choices:["Mount Arayat","Mount Banahaw","Mount Makiling","Mount Isarog"], answer:0},
+      {q:"Ninung pogi?", choices:["Nino","Reggie","Cholo","Lance"], answer:1},
+      {q:"Which of the following is NOT in Pampanga?", choices:["Olongapo City","City of San Fernando","Magalang","Apalit"], answer:0},
+    ];
+
+    // ------------------- STATE -------------------
+    let idx = 0;                 // question index (0..14)
+    let banked = 0;              // last won (non-checkpoint) points
+    let guaranteed = 0;          // last checkpoint reached
+    let locked = false;          // prevent multiple answers
+    let timer = null;            // interval id
+    const perQuestionTime = 30;  // seconds
+    let timeLeft = perQuestionTime;
+
+    const used = { fifty:false, audience:false, phone:false };
+
+    // ------------------- ELEMENTS -------------------
+    const els = {
+      ladder: document.getElementById('ladder'),
+      question: document.getElementById('question'),
+      answers: document.getElementById('answers'),
+      guaranteed: document.getElementById('guaranteed'),
+      banked: document.getElementById('banked'),
+      timerRing: document.getElementById('timerRing'),
+      timerNum: document.getElementById('timerNum'),
+      btnRestart: document.getElementById('btn-restart'),
+      btnHow: document.getElementById('btn-how'),
+      // lifelines
+      ll5050: document.getElementById('ll-5050'),
+      llAud: document.getElementById('ll-aud'),
+      llPhone: document.getElementById('ll-phone'),
+      // modals
+      audienceModal: document.getElementById('audienceModal'),
+      audBars: document.getElementById('audBars'),
+      audNote: document.getElementById('audNote'),
+      audClose: document.getElementById('audClose'),
+      phoneModal: document.getElementById('phoneModal'),
+      phoneHint: document.getElementById('phoneHint'),
+      phoneClose: document.getElementById('phoneClose'),
+      howModal: document.getElementById('howModal'),
+      howClose: document.getElementById('howClose'),
+      endModal: document.getElementById('endModal'),
+      endText: document.getElementById('endText'),
+      endRestart: document.getElementById('endRestart'),
+    };
+
+    // ------------------- HELPERS -------------------
+    function pts(n){ return n.toLocaleString('en-PH') + ' pts'; }
+
+    function drawLadder(){
+      // Build reversed ladder (top = max points)
+      els.ladder.innerHTML = '';
+      for(let i = points.length - 1; i >= 0; i--){
+        const li = document.createElement('li');
+        const level = document.createElement('span');
+        level.textContent = (i+1).toString().padStart(2,'0');
+        level.style.opacity = .65;
+        const prize = document.createElement('span');
+        prize.textContent = pts(points[i]);
+        prize.style.marginLeft = '6px';
+        if(safeMilestones.has(i)){
+          const safe = document.createElement('span');
+          safe.className = 'safe'; safe.textContent = '●';
+          safe.style.marginLeft = '6px'; safe.title = 'Checkpoint';
+          li.append(level, prize, safe);
+        } else {
+          li.append(level, prize);
+        }
+        li.dataset.index = i;
+        els.ladder.appendChild(li);
+      }
+    }
+
+    function updateLadder(){
+      Array.from(els.ladder.querySelectorAll('li')).forEach(li => {
+        const i = parseInt(li.dataset.index,10);
+        li.classList.toggle('current', i === idx);
+        li.classList.toggle('past', i < idx);
+      });
+    }
+
+    function resetTimer(){
+      clearInterval(timer); timeLeft = perQuestionTime; updateTimerUI();
+      timer = setInterval(()=>{
+        timeLeft--; updateTimerUI();
+        if(timeLeft <= 0){ clearInterval(timer); timeOut(); }
+      }, 1000);
+    }
+
+    function updateTimerUI(){
+      els.timerNum.textContent = timeLeft;
+      const frac = timeLeft / perQuestionTime;
+      const deg = Math.max(0, Math.min(360, Math.round(360*frac)));
+      els.timerRing.style.setProperty('--angle', deg+'deg');
+      if(timeLeft <= 5){ els.timerRing.style.filter = 'drop-shadow(0 0 10px #ff5e79)'; }
+      else { els.timerRing.style.filter = 'none'; }
+    }
+
+    function enableAllAnswers(){
+      els.answers.querySelectorAll('.answer').forEach(b=>{
+        b.disabled = false; b.classList.remove('selected','correct','wrong'); b.style.visibility = '';
+      });
+    }
+
+    function updateBankUI(){
+      els.guaranteed.textContent = pts(guaranteed);
+      els.banked.textContent = pts(banked);
+    }
+
+    function loadQuestion(){
+      locked = false;
+      updateLadder();
+      const current = questions[idx];
+      els.question.textContent = current.q;
+      els.answers.innerHTML = '';
+      const letters = ['A','B','C','D'];
+      current.choices.forEach((text, i)=>{
+        const btn = document.createElement('button');
+        btn.className = 'answer';
+        btn.setAttribute('data-choice', i);
+        btn.innerHTML = `<span class="badge">${letters[i]}</span> ${text}`;
+        btn.addEventListener('click', ()=> choose(i, btn));
+        els.answers.appendChild(btn);
+      });
+      enableAllAnswers();
+      resetTimer();
+      updateBankUI();
+    }
+
+    function choose(i, btn){
+      if(locked) return; locked = true; clearInterval(timer);
+      btn.classList.add('selected');
+      setTimeout(()=>{ reveal(i); }, 700);
+    }
+
+    function reveal(i){
+      const correct = questions[idx].answer;
+      const buttons = Array.from(els.answers.querySelectorAll('.answer'));
+      buttons.forEach(b=> b.disabled = true);
+      const chosenBtn = buttons[i];
+      buttons[correct].classList.add('correct');
+      if(i !== correct){ chosenBtn.classList.add('wrong'); gameOver(false); return; }
+      banked = points[idx];
+      if(safeMilestones.has(idx)) guaranteed = points[idx];
+      updateBankUI();
+      setTimeout(()=>{
+        idx++;
+        if(idx >= questions.length){
+          winGame();
+        } else {
+          loadQuestion();
+        }
+      }, 1200);
+    }
+
+    function timeOut(){
+      locked = true;
+      els.endText.textContent = `Time's up! Final score: ${pts(guaranteed)}.`;
+      showEnd();
+    }
+
+    function gameOver(walkAway){
+      const take = walkAway ? banked : guaranteed;
+      els.endText.textContent = `Incorrect! Final score: ${pts(take)}.`;
+      showEnd();
+    }
+
+    function winGame(){
+      els.endText.textContent = `You reached the top! Final score: ${pts(points[points.length-1])}!`;
+      showEnd();
+    }
+
+    function showEnd(){
+      document.getElementById('endTitle').textContent = idx >= questions.length ? 'You Win!' : 'Game Over';
+      toggle(els.endModal, true);
+    }
+
+    function restart(){
+      idx = 0; banked = 0; guaranteed = 0; locked = false; timeLeft = perQuestionTime;
+      used.fifty = used.audience = used.phone = false;
+      els.ll5050.classList.remove('used');
+      els.llAud.classList.remove('used');
+      els.llPhone.classList.remove('used');
+      enableAllAnswers();
+      loadQuestion();
+    }
+
+    // ------------------- LIFELINES -------------------
+    function use5050(){
+      if(used.fifty || locked) return; used.fifty = true; els.ll5050.classList.add('used');
+      const correct = questions[idx].answer;
+      const wrongs = [0,1,2,3].filter(n=>n!==correct);
+      shuffle(wrongs);
+      const toHide = wrongs.slice(0,2);
+      toHide.forEach(n=>{
+        const btn = els.answers.querySelector(`[data-choice="${n}"]`);
+        if(btn){ btn.style.visibility = 'hidden'; btn.disabled = true; }
+      });
+    }
+
+    function useAudience(){
+      if(used.audience || locked) return; used.audience = true; els.llAud.classList.add('used');
+      const correct = questions[idx].answer;
+      const base = idx < 5 ? [55, 15, 15, 15] : idx < 10 ? [45, 20, 20, 15] : [35, 25, 20, 20];
+      const dist = [0,0,0,0];
+      base.forEach((v, i)=>{ dist[(i+correct)%4] = v; });
+      let total = 0;
+      for(let i=0;i<4;i++){ dist[i] = Math.max(5, Math.round(dist[i] + (Math.random()*16-8))); total += dist[i]; }
+      for(let i=0;i<4;i++){ dist[i] = Math.round(dist[i] * 100 / total); }
+      const sum = dist.reduce((a,b)=>a+b,0); if(sum!==100) dist[0] += 100-sum;
+      els.audBars.innerHTML = '';
+      dist.forEach(p=>{
+        const col = document.createElement('div'); col.className = 'col'; col.style.height = `${p*1.5}px`;
+        col.title = `${p}%`; els.audBars.appendChild(col);
+      });
+      els.audNote.textContent = `Audience votes (higher bars = more votes).`;
+      toggle(els.audienceModal, true);
+    }
+
+    function usePhone(){
+      if(used.phone || locked) return; used.phone = true; els.llPhone.classList.add('used');
+      const correct = questions[idx].answer;
+      const reliability = idx < 5 ? 0.85 : idx < 10 ? 0.7 : 0.55;
+      const willBeRight = Math.random() < reliability;
+      const guess = willBeRight ? correct : pickRandom([0,1,2,3].filter(n=>n!==correct));
+      const letters = ['A','B','C','D'];
+      const msg = willBeRight ?
+        `"I'm pretty confident it's ${letters[guess]}"` :
+        `"Hmm… tough one. I'd go with ${letters[guess]}, but not 100% sure."`;
+      els.phoneHint.textContent = msg;
+      toggle(els.phoneModal, true);
+    }
+
+    // ------------------- UTILS -------------------
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j]]; } return a; }
+    function pickRandom(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+    function toggle(el, show){ el.classList.toggle('show', !!show); el.setAttribute('aria-hidden', show? 'false':'true'); }
+
+    // ------------------- EVENTS -------------------
+    els.ll5050.addEventListener('click', use5050);
+    els.llAud.addEventListener('click', useAudience);
+    els.llPhone.addEventListener('click', usePhone);
+
+    els.audClose.addEventListener('click', ()=> toggle(els.audienceModal, false));
+    els.phoneClose.addEventListener('click', ()=> toggle(els.phoneModal, false));
+
+    els.btnHow.addEventListener('click', ()=> toggle(els.howModal, true));
+    els.howClose.addEventListener('click', ()=> toggle(els.howModal, false));
+
+    els.btnRestart.addEventListener('click', restart);
+    els.endRestart.addEventListener('click', ()=>{ toggle(els.endModal,false); restart(); });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e)=>{
+      const key = e.key.toLowerCase();
+      if(['a','b','c','d'].includes(key)){
+        const map = {a:0,b:1,c:2,d:3};
+        const btn = els.answers.querySelector(`[data-choice="${map[key]}"]`);
+        if(btn) btn.click();
+      } else if(key==='1'){ els.ll5050.click(); }
+        else if(key==='2'){ els.llAud.click(); }
+        else if(key==='3'){ els.llPhone.click(); }
+        else if(key==='r'){ restart(); }
+    });
+
+    // Kiosk scaling so the whole 1080x1920 panel is visible on any screen
+    function setKioskScale(){
+      const s = Math.min(window.innerWidth/1080, window.innerHeight/1920);
+      document.documentElement.style.setProperty('--kiosk-scale', s);
+    }
+    window.addEventListener('resize', setKioskScale);
+
+    // Bootstrap (robust)
+    function bootstrap(){
+      try{
+        setKioskScale();
+        drawLadder();
+        restart();
+      } catch(e){
+        els.question.textContent = 'Init error: ' + (e && e.message ? e.message : e);
+        console.error(e);
+      }
+    }
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', bootstrap);
+    } else {
+      bootstrap();
+    }
+  </script>
+</body>
+</html>
